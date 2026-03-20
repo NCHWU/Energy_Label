@@ -22,7 +22,7 @@ def test_runner_with_fake_adapter():
         "add two numbers": "def solve(a, b): return a + b",
     })
     results = run_benchmark(tasks, adapter, model_name="fake", timeout_s=5,
-                            country_iso_code="NLD")
+                            gpu_poll_interval=0.25)
     assert len(results) == 1
     assert results[0].passed is True
     assert results[0].energy_j >= 0
@@ -39,6 +39,6 @@ def test_runner_failing_solution():
     # Default FakeAdapter returns a no-op function → assertion will fail
     adapter = FakeAdapter()
     results = run_benchmark(tasks, adapter, model_name="fake", timeout_s=5,
-                            country_iso_code="NLD")
+                            gpu_poll_interval=0.25)
     assert len(results) == 1
     assert results[0].passed is False

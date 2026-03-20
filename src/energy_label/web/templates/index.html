@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LLM Energy Label</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+
+  <div class="container">
+
+    <!-- Hero -->
+    <section class="hero">
+      <h1>LLM <span>Energy Label</span></h1>
+      <p>Find the most energy-efficient LLM for your task. Benchmarked on real hardware, rated A to G.</p>
+    </section>
+
+    <!-- Domain selector -->
+    <nav class="domain-bar">
+      {% for d in domains %}
+      <button class="domain-pill" data-domain="{{ d.id }}">
+        {{ d.name }}
+      </button>
+      {% endfor %}
+      {% if not domains %}
+      <span style="color:var(--text-sec);font-size:15px;">No benchmark domains available yet.</span>
+      {% endif %}
+    </nav>
+
+    <!-- Domain Insight -->
+    <div id="domain-insight" class="insight-card" style="display:none">
+      <div class="insight-grid">
+        <div class="insight-block">
+          <div class="insight-label">Accuracy Metric</div>
+          <div class="insight-value" id="insight-metric"></div>
+        </div>
+        <div class="insight-block">
+          <div class="insight-label">Tasks</div>
+          <div class="insight-value" id="insight-tasks"></div>
+        </div>
+        <div class="insight-block insight-wide">
+          <div class="insight-label">How We Measure</div>
+          <div class="insight-detail" id="insight-detail"></div>
+        </div>
+        <div class="insight-block insight-wide">
+          <div class="insight-label">Why This Metric</div>
+          <div class="insight-detail" id="insight-why"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Leaderboard -->
+    <div id="leaderboard-card" class="leaderboard-card" style="display:none">
+      <div class="leaderboard-header">
+        <h2 id="domain-title">Leaderboard</h2>
+        <span class="meta">Sorted by Energy Per Correct Answer (EPCA)</span>
+      </div>
+      <table class="lb-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Model</th>
+            <th>Label</th>
+            <th>Accuracy</th>
+            <th>EPCA</th>
+            <th>Total Energy</th>
+            <th>Avg Runtime</th>
+          </tr>
+        </thead>
+        <tbody id="leaderboard-body"></tbody>
+      </table>
+    </div>
+
+  </div>
+
+  <footer>
+    <p>LLM Energy Label &mdash; Open-source benchmark for sustainable AI. <a href="https://github.com/NCHWU/sustainableA1" target="_blank">GitHub</a></p>
+  </footer>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

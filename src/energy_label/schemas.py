@@ -26,4 +26,7 @@ class TaskResult:
     generated_code: str = ""
     runtime_ms: Optional[float] = None
     peak_memory_kb: Optional[float] = None
+    gpu_energy_j: Optional[float] = None
+    cpu_energy_j: Optional[float] = None
+    gpu_temp_avg_c: Optional[float] = None
     error: Optional[str] = None
