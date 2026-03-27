@@ -6,12 +6,14 @@ from typing import Optional
 
 @dataclass
 class BenchmarkTask:
-    """A single coding task in the benchmark suite."""
+    """A single benchmark task (coding or reasoning)."""
 
     task_id: str
     prompt: str
-    test_code: str
+    test_code: str = ""
     difficulty: str = "medium"
+    task_type: str = "code"          # "code" or "reasoning"
+    expected_answer: str = ""        # for reasoning tasks: "A", "B", "C", "D"
 
 
 @dataclass
@@ -24,6 +26,7 @@ class TaskResult:
     energy_j: float
     latency_s: float
     generated_code: str = ""
+    iteration: int = 1
     runtime_ms: Optional[float] = None
     peak_memory_kb: Optional[float] = None
     gpu_energy_j: Optional[float] = None

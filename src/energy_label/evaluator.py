@@ -85,3 +85,32 @@ def evaluate_solution(
         )
     except (_json.JSONDecodeError, IndexError):
         return EvalResult(passed=True)
+
+
+def evaluate_answer(response: str, expected_answer: str) -> EvalResult:
+    """Check if the model's response contains the expected answer letter.
+
+    Looks for the answer letter (A/B/C/D) in the response. Handles common
+    formats like 'B', 'B)', '(B)', 'Answer: B', 'The answer is B', etc.
+    """
+    import re
+
+    cleaned = response.strip().upper()
+    expected = expected_answer.strip().upper()
+
+    # Direct match: response is just the letter
+    if cleaned == expected:
+        return EvalResult(passed=True)
+
+    # Look for patterns like "B", "(B)", "B)", "Answer: B", "answer is B"
+    patterns = [
+        rf'\b{expected}\b',              # standalone letter
+        rf'\({expected}\)',               # (B)
+        rf'{expected}\)',                 # B)
+        rf'answer\s*(?:is|:)\s*{expected}',  # answer is B / answer: B
+    ]
+    for pattern in patterns:
+        if re.search(pattern, cleaned):
+            return EvalResult(passed=True)
+
+    return EvalResult(passed=False, error=f"Expected '{expected}', got: {response[:200]}")
