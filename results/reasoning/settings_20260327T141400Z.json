@@ -1,0 +1,23 @@
+{
+  "run_id": "f3728551",
+  "timestamp": "20260327T141400Z",
+  "models": [
+    "qwen2.5-coder:3b",
+    "qwen2.5-coder:7b",
+    "codellama:7b",
+    "phi3:3.8b",
+    "mistral:7b",
+    "llama3.1:8b",
+    "qwen3:4b",
+    "qwen3:14b"
+  ],
+  "task_file": "data/tasks_reasoning_10.jsonl",
+  "num_tasks": 10,
+  "repeats": 30,
+  "rest_seconds": 5,
+  "warm_up": true,
+  "timeout_s": 10,
+  "ollama_url": "http://localhost:11434",
+  "platform": "Linux",
+  "python_version": "3.13.11 | packaged by Anaconda, Inc. | (main, Dec 10 2025, 21:28:48) [GCC 14.3.0]"
+}

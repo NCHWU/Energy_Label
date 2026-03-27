@@ -103,6 +103,30 @@ def assign_label(
     return "G"
 
 
+def compute_thresholds(epca_values: List[float]) -> Dict[str, float]:
+    """Compute A-G thresholds from the actual EPCA distribution.
+
+    Uses the best (lowest) EPCA as anchor and divides the range into
+    bands. Models close to the best get A, those much worse get G.
+
+    Band boundaries (relative to best EPCA):
+        A: <= best * 1.1   (within 10% of best)
+        B: <= best * 1.35
+        C: <= best * 1.7
+        D: <= best * 2.2
+        E: <= best * 3.0
+        F: <= best * 4.5
+        G: > F threshold
+    """
+    valid = sorted([v for v in epca_values if v != float("inf") and v > 0])
+    if not valid:
+        return BenchmarkConfig().label_thresholds
+
+    best = valid[0]
+    multipliers = {"A": 1.1, "B": 1.35, "C": 1.7, "D": 2.2, "E": 3.0, "F": 4.5}
+    return {label: round(best * mult, 2) for label, mult in multipliers.items()}
+
+
 def scoreboard(
     results_by_model: Dict[str, List[TaskResult]],
 ) -> List[Dict]:
@@ -111,6 +135,10 @@ def scoreboard(
     Returns a list of dicts sorted by EPCA (best first).
     Includes per-iteration statistics when multiple iterations are present.
     """
+    # Compute data-driven thresholds from all models' EPCA values
+    all_epca = [epca(r) for r in results_by_model.values()]
+    thresholds = compute_thresholds(all_epca)
+
     rows = []
     for model, results in results_by_model.items():
         epca_val = epca(results)
@@ -133,7 +161,7 @@ def scoreboard(
             "mean_energy_per_task_j": round(avg_energy, 4),
             "std_energy_per_task_j": round(std_energy, 4) if std_energy is not None else None,
             "epca_j": round(epca_val, 4) if epca_val != float("inf") else None,
-            "label": assign_label(epca_val),
+            "label": assign_label(epca_val, thresholds),
             "avg_latency_s": _safe_mean([r.latency_s for r in results]),
             "avg_runtime_ms": _safe_mean([r.runtime_ms for r in results if r.runtime_ms is not None]),
             "avg_memory_kb": _safe_mean([r.peak_memory_kb for r in results if r.peak_memory_kb is not None]),

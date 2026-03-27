@@ -6,6 +6,5 @@ build/
 .venv/
 .env
 *.csv
-results/
 .pytest_cache/
 .codecarbon.csv

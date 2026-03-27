@@ -1,0 +1,17 @@
+{
+  "run_id": "74053d63",
+  "timestamp": "20260327T104333Z",
+  "models": [
+    "qwen3:4b",
+    "qwen3:14b"
+  ],
+  "task_file": "data/tasks_sample_5.jsonl",
+  "num_tasks": 5,
+  "repeats": 1,
+  "rest_seconds": 0,
+  "warm_up": true,
+  "timeout_s": 10,
+  "ollama_url": "http://localhost:11434",
+  "platform": "Linux",
+  "python_version": "3.13.11 | packaged by Anaconda, Inc. | (main, Dec 10 2025, 21:28:48) [GCC 14.3.0]"
+}

@@ -64,12 +64,11 @@ def plot_benchmark(results: List[TaskResult], out_dir: Path) -> None:
 
 
 def _plot_energy_per_task(by_model_task, tasks, models, color_map, out_dir):
-    """Line chart: mean energy per task with std band (like sustainableA1)."""
+    """Line chart: mean energy per task with std band — log scale for visibility."""
     fig, ax = plt.subplots(figsize=(10, 5))
     x = np.arange(len(tasks))
-    width = 0.8 / len(models)
 
-    for i, model in enumerate(models):
+    for model in models:
         means, stds = [], []
         for task in tasks:
             task_results = by_model_task.get(model, {}).get(task, [])
@@ -78,20 +77,20 @@ def _plot_energy_per_task(by_model_task, tasks, models, color_map, out_dir):
             stds.append(np.std(energies) if len(energies) > 1 else 0)
 
         means, stds = np.array(means), np.array(stds)
-        offset = x + i * width - (len(models) - 1) * width / 2
 
-        ax.plot(offset, means, marker="o", label=model, color=color_map[model],
+        ax.plot(x, means, marker="o", label=model, color=color_map[model],
                 linewidth=2, markersize=5, zorder=3)
-        ax.fill_between(offset, means - stds, means + stds,
+        ax.fill_between(x, means - stds, means + stds,
                         color=color_map[model], alpha=0.15, zorder=2)
 
+    ax.set_yscale("log")
     ax.set_xlabel("Task")
-    ax.set_ylabel("Energy (Joules, mean ± std)")
+    ax.set_ylabel("Energy (Joules, log scale, mean ± std)")
     ax.set_title("Energy Consumption per Task")
     ax.set_xticks(x)
     ax.set_xticklabels(tasks, rotation=30, ha="right", fontsize=9)
-    ax.legend(fontsize=8, framealpha=0.7)
-    ax.grid(axis="y", linestyle="--", alpha=0.4)
+    ax.legend(fontsize=8, framealpha=0.7, loc="best")
+    ax.grid(axis="y", linestyle="--", alpha=0.4, which="both")
     ax.spines[["top", "right"]].set_visible(False)
     plt.tight_layout()
     plt.savefig(out_dir / "energy_per_task.png", dpi=150, bbox_inches="tight")
@@ -117,10 +116,11 @@ def _plot_epca_comparison(by_model, models, color_map, out_dir):
     # Add label text on bars
     for bar, val, model in zip(bars, epca_vals, models):
         label = assign_label(val if val > 0 else float("inf"))
-        ax.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + 0.5,
+        ax.text(bar.get_x() + bar.get_width() / 2, bar.get_height() * 1.1,
                 f"Label {label}", ha="center", va="bottom", fontsize=9, fontweight="bold")
 
-    ax.set_ylabel("EPCA (Joules per Correct Answer)")
+    ax.set_yscale("log")
+    ax.set_ylabel("EPCA (Joules per Correct Answer, log scale)")
     ax.set_title("Energy Per Correct Answer (EPCA) — Lower is Better")
     ax.spines[["top", "right"]].set_visible(False)
     ax.grid(axis="y", linestyle="--", alpha=0.4)
@@ -188,30 +188,45 @@ def _plot_latency_per_task(by_model_task, tasks, models, color_map, out_dir):
 
 
 def _plot_energy_breakdown(by_model, models, color_map, out_dir):
-    """Stacked bar: GPU vs CPU energy per model."""
-    fig, ax = plt.subplots(figsize=(8, 5))
+    """Stacked bar: GPU vs CPU energy per model with percentage labels."""
+    fig, ax = plt.subplots(figsize=(10, 5))
 
     gpu_totals = []
     cpu_totals = []
     for model in models:
         gpu = sum(r.gpu_energy_j or 0 for r in by_model[model])
         cpu = sum(r.cpu_energy_j or 0 for r in by_model[model])
-        # Average across iterations
         n_iters = max(r.iteration for r in by_model[model])
         gpu_totals.append(gpu / n_iters)
         cpu_totals.append(cpu / n_iters)
 
-    x = np.arange(len(models))
-    ax.bar(x, gpu_totals, label="GPU Energy", color="#4C72B0", edgecolor="white")
-    ax.bar(x, cpu_totals, bottom=gpu_totals, label="CPU Energy", color="#DD8452", edgecolor="white")
+    gpu_totals = np.array(gpu_totals)
+    cpu_totals = np.array(cpu_totals)
+    totals = gpu_totals + cpu_totals
 
-    ax.set_ylabel("Mean Total Energy (Joules)")
+    x = np.arange(len(models))
+    bars_gpu = ax.bar(x, gpu_totals, label="GPU Energy", color="#4C72B0", edgecolor="white")
+    bars_cpu = ax.bar(x, cpu_totals, bottom=gpu_totals, label="CPU Energy", color="#DD8452", edgecolor="white")
+
+    # Add percentage labels
+    for i, (gpu, cpu, total) in enumerate(zip(gpu_totals, cpu_totals, totals)):
+        if total > 0:
+            gpu_pct = gpu / total * 100
+            cpu_pct = cpu / total * 100
+            ax.text(i, gpu / 2, f"{gpu_pct:.0f}%", ha="center", va="center",
+                    fontsize=8, fontweight="bold", color="white")
+            if cpu_pct > 3:  # only show if visible
+                ax.text(i, gpu + cpu / 2, f"{cpu_pct:.1f}%", ha="center", va="center",
+                        fontsize=7, fontweight="bold", color="white")
+
+    ax.set_yscale("log")
+    ax.set_ylabel("Mean Total Energy (Joules, log scale)")
     ax.set_title("GPU vs CPU Energy Breakdown (averaged over iterations)")
     ax.set_xticks(x)
     ax.set_xticklabels(models, rotation=30, ha="right", fontsize=9)
     ax.legend(fontsize=8)
     ax.spines[["top", "right"]].set_visible(False)
-    ax.grid(axis="y", linestyle="--", alpha=0.4)
+    ax.grid(axis="y", linestyle="--", alpha=0.4, which="both")
     plt.tight_layout()
     plt.savefig(out_dir / "energy_breakdown.png", dpi=150, bbox_inches="tight")
     plt.close(fig)
@@ -262,12 +277,13 @@ def _plot_combined_overview(by_model, by_model_task, tasks, models, color_map, o
             energies = [r.energy_j for r in task_results]
             means.append(np.mean(energies) if energies else 0)
         ax.plot(x, means, marker="o", label=model, color=color_map[model], linewidth=2, markersize=5)
-    ax.set_title("Energy per Task", fontsize=11, fontweight="bold")
+    ax.set_yscale("log")
+    ax.set_title("Energy per Task (log scale)", fontsize=11, fontweight="bold")
     ax.set_ylabel("Energy (J)")
     ax.set_xticks(x)
     ax.set_xticklabels(tasks, rotation=30, ha="right", fontsize=8)
-    ax.legend(fontsize=7)
-    ax.grid(axis="y", linestyle="--", alpha=0.4)
+    ax.legend(fontsize=7, loc="best")
+    ax.grid(axis="y", linestyle="--", alpha=0.4, which="both")
     ax.spines[["top", "right"]].set_visible(False)
 
     # Top-right: EPCA bars
@@ -279,12 +295,13 @@ def _plot_combined_overview(by_model, by_model_task, tasks, models, color_map, o
         epca_vals.append(val if val != float("inf") else 0)
         bar_colors.append(LABEL_COLORS.get(assign_label(val), "#8C8C8C"))
     ax.bar(models, epca_vals, color=bar_colors, edgecolor="white")
-    ax.set_title("EPCA (lower is better)", fontsize=11, fontweight="bold")
+    ax.set_yscale("log")
+    ax.set_title("EPCA (lower is better, log scale)", fontsize=11, fontweight="bold")
     ax.set_ylabel("EPCA (J)")
     plt.sca(ax)
     plt.xticks(rotation=30, ha="right", fontsize=8)
     ax.spines[["top", "right"]].set_visible(False)
-    ax.grid(axis="y", linestyle="--", alpha=0.4)
+    ax.grid(axis="y", linestyle="--", alpha=0.4, which="both")
 
     # Bottom-left: Pass rate
     ax = axes[1, 0]
