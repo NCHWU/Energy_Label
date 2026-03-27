@@ -1,0 +1,26 @@
+[
+  {
+    "id": "coding",
+    "name": "Coding (LeetCode)",
+    "accuracy_metric": "pass@1",
+    "tasks_count": 5,
+    "accuracy_detail": "Each model generates a Python solve() function. We run it against hidden test cases. A task passes if all asserts succeed.",
+    "why_this_metric": "pass@1 measures whether the model produces correct code on the first attempt \u2014 the most realistic usage pattern."
+  },
+  {
+    "id": "reasoning",
+    "name": "Logical Reasoning",
+    "accuracy_metric": "Accuracy (A/B/C/D)",
+    "tasks_count": 10,
+    "accuracy_detail": "Multiple-choice questions testing syllogisms, patterns, and deduction. The model must respond with the correct letter.",
+    "why_this_metric": "Multiple-choice removes ambiguity in evaluation \u2014 the answer is objectively right or wrong."
+  },
+  {
+    "id": "math",
+    "name": "Math (High School)",
+    "accuracy_metric": "Accuracy (A/B/C/D)",
+    "tasks_count": 10,
+    "accuracy_detail": "Multiple-choice questions covering algebra, geometry, statistics, functions, and fractions at high school level.",
+    "why_this_metric": "Tests mathematical reasoning across diverse topics. Multiple-choice format enables unambiguous scoring."
+  }
+]
